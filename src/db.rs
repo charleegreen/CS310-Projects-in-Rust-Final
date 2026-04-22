@@ -1,12 +1,12 @@
 use crate::recipes::Recipe;
 use rusqlite::{Connection, Error, named_params};
 
-pub struct SqlLiteConnection<'a> {
-    pub conn: &'a Connection,
+pub struct SqlLiteConnection {
+    pub conn: Connection,
 }
 
-impl<'a> SqlLiteConnection<'a> {
-    pub fn new(conn: &'a Connection) -> Self {
+impl<'a> SqlLiteConnection {
+    pub fn new(conn: Connection) -> Self {
         Self { conn }
     }
 

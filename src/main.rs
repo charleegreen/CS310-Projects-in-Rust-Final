@@ -11,8 +11,8 @@ use rusqlite::Connection;
 use std::io;
 
 fn main() {
-    let conn = Connection::open("RecipeFinder.db").expect("Database not found");
-    let mut dbconnection = SqlLiteConnection::new(&conn);
+    let dbconnection =
+        SqlLiteConnection::new(Connection::open("RecipeFinder.db").expect("Database not found"));
     dbconnection.create_table().expect("Could not create table");
 
     println!("Welcome to the Recipe Finder!");

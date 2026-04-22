@@ -1,22 +1,29 @@
+use rayon::prelude::*;
+//this will allow the multithreading for the data migration into the database
+//the multithreading part is the data parsing of the files.
 use recipe_finder::db::*;
 use recipe_finder::filters::{CalorieRange, PrepTime};
 use recipe_finder::recipes::*;
 use rusqlite::Connection;
 use std::fs;
-use std::path::Path;
+use std::sync::Mutex; //needed to make threads take turns actually going into the database
 
+//chose to do a bin because this code should only be run once, and is "seperate" from the recipe finder app
 //this crate is to push all my recipe .txt files that are in a folder into the database!
 // example file name -- HighHighPasta1.txt
 
 fn main() {
-    let conn = Connection::open("RecipeFinder.db").expect("Database not found");
-    let mut dbconnection = SqlLiteConnection::new(&conn);
+    let dbconnection =
+        SqlLiteConnection::new(Connection::open("RecipeFinder.db").expect("Database not found"));
     dbconnection.create_table().expect("Could not create table");
+    let dbconnection = Mutex::new(dbconnection);
 
-    let entries = fs::read_dir("recipes/").expect("Could not find recipes folder");
+    let entries: Vec<_> = fs::read_dir("recipes/")
+        .expect("Could not find recipes folder")
+        .collect();
 
-    for entry in entries {
-        let entry = entry.expect("Could not read entry");
+    entries.par_iter().for_each(|entry| {
+        let entry = entry.as_ref().expect("Could not read entry");
         let path = entry.path();
         let stem = path
             .file_stem() //this strips away the file path and the .txt at the end.
@@ -26,18 +33,19 @@ fn main() {
         let stem = stem.trim_end_matches(|c: char| c.is_numeric()); //this gets rid of hte trailing 1 or 2 on the filename
 
         //this section is pulling off the first section of the file name(calories) and creating the enum and removing from filename
-        let (calorie_range, rest) = if stem.starts_with("High") {
+        let (_calorie_range, rest) = if stem.starts_with("High") {
+            //learned the underscore tells Rust that its okay that its unused
             (CalorieRange::High, stem.strip_prefix("High").unwrap())
         } else if stem.starts_with("Low") {
             (CalorieRange::Low, stem.strip_prefix("Low").unwrap())
         } else if stem.starts_with("Med") {
             (CalorieRange::Medium, stem.strip_prefix("Med").unwrap())
         } else {
-            continue;
+            return;
         };
 
         //this section does the same, but with prep_time, the next metadata in the filename structure.
-        let (prep_time, last) = if rest.starts_with("High") {
+        let (_prep_time, last) = if rest.starts_with("High") {
             (Some(PrepTime::High), rest.strip_prefix("High").unwrap())
         } else if rest.starts_with("Low") {
             (Some(PrepTime::Low), rest.strip_prefix("Low").unwrap())
@@ -60,7 +68,7 @@ fn main() {
             "Pasta" => Category::Pasta,
             "Salad" => Category::Salad,
             "Smooth" => Category::Smoothie,
-            _ => continue,
+            _ => return,
         };
         let meal_type = match category {
             //deduct what the meal_type is
@@ -75,10 +83,26 @@ fn main() {
             Category::Smoothie => MealType::Breakfast,
         };
 
-        //now the file parsing for the rest of hte recipe data
+        //now the file parsing for the rest of the recipe data
         let content = fs::read_to_string(&path).expect("Could not read file");
-        let lines: Vec<&str> = content.lines().collect(); //split the file into lines
-    }
+        let (name, calories, prep_time_mins, instructions, ingredients, servings) =
+            parse_recipe(&content);
+        let recipe = Recipe {
+            name: name,
+            meal_type: meal_type,
+            calories: calories,
+            prep_time_mins: prep_time_mins,
+            category: category,
+            ingredients: ingredients,
+            instructions: instructions,
+            servings: servings,
+        };
+        dbconnection
+            .lock()
+            .unwrap()
+            .create_recipe(&recipe)
+            .expect("Could not create recipe");
+    })
 }
 
 //need these so that I can grab numbers from the file
@@ -108,5 +132,55 @@ fn parse_time(line: &str) -> u32 {
     }
 }
 
-//recipe parsing function.
-fn parse_recipe(content: &str) -> (String, u32, u32) {}
+//recipe parsing function.          name, cal, prep, instructions, ingredients
+fn parse_recipe(content: &str) -> (String, u32, u32, Option<String>, Vec<String>, u32) {
+    let lines: Vec<&str> = content.lines().collect(); //seperate into lines
+    let name = lines[0].trim().to_string(); //line one is always the name
+    let mut calories = 0u32; //tells rust that this 0 is a u32 specifically
+    let mut prep_time_mins = 0u32;
+    let mut servings = 1u32;
+    let mut in_ingredients = false;
+    let mut in_directions = false;
+    let mut ingredients: Vec<String> = Vec::new();
+    let mut instructions: Vec<String> = Vec::new();
+
+    for line in &lines {
+        if line.contains("alorie") {
+            //locating calorie line
+            calories = extract_first_number(line).unwrap_or(0);
+        } else if line.contains("ime") {
+            //locating time line
+            prep_time_mins = parse_time(line);
+        } else if line.contains("erving") {
+            servings = extract_first_number(line).unwrap_or(0);
+        } else if line.contains("INGREDIENTS") {
+            //locates if line is in ingredients
+            in_ingredients = true;
+            in_directions = false;
+        } else if line.contains("DIRECTIONS") {
+            //locates if line is in directions
+            in_ingredients = false;
+            in_directions = true;
+        } else if in_ingredients && !line.trim().is_empty() {
+            //pushes line to ingredients
+            ingredients.push(line.trim().to_string());
+        } else if in_directions && !line.trim().is_empty() {
+            //pushes line to directions
+            instructions.push(line.trim().to_string());
+        }
+    }
+    //there arent instructions in Smoothie. so0 this is the wrap for the Option type
+    let instructions_text = if instructions.is_empty() {
+        None
+    } else {
+        Some(instructions.join("\n"))
+    };
+    (
+        name,
+        calories,
+        prep_time_mins,
+        instructions_text,
+        ingredients,
+        servings,
+    )
+}
