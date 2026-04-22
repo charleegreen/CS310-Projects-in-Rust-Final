@@ -3,16 +3,6 @@
 version = 4
 
 [[package]]
-name = "CS310-Projects-in-Rust-Final"
-version = "0.1.0"
-dependencies = [
- "rand",
- "rayon",
- "rusqlite",
- "serde",
-]
-
-[[package]]
 name = "anyhow"
 version = "1.0.102"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -299,6 +289,16 @@ checksum = "22e18b0f0062d30d4230b2e85ff77fdfe4326feb054b9783a3460d8435c8ab91"
 dependencies = [
  "crossbeam-deque",
  "crossbeam-utils",
+]
+
+[[package]]
+name = "recipe_finder"
+version = "0.1.0"
+dependencies = [
+ "rand",
+ "rayon",
+ "rusqlite",
+ "serde",
 ]
 
 [[package]]

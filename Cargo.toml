@@ -1,5 +1,5 @@
 [package]
-name = "CS310-Projects-in-Rust-Final"
+name = "recipe_finder"
 version = "0.1.0"
 edition = "2024"
 
