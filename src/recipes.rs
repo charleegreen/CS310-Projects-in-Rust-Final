@@ -64,3 +64,29 @@ impl FromStr for Category {
         }
     }
 }
+
+#[cfg(test)]
+
+mod tests {
+    use super::*;
+
+    #[test]
+    fn meal_type_parse() {
+        assert_eq!("Breakfast".parse::<MealType>(), Ok(MealType::Breakfast))
+    }
+
+    #[test]
+    fn meal_type_parse_fail() {
+        assert!("breakfast".parse::<MealType>().is_err())
+    }
+
+    #[test]
+    fn cat_parse() {
+        assert_eq!("Italian".parse::<Category>(), Ok(Category::Italian))
+    }
+
+    #[test]
+    fn cat_parse_fail() {
+        assert!("italy".parse::<Category>().is_err())
+    }
+}

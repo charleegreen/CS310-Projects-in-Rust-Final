@@ -120,11 +120,11 @@ fn parse_time(line: &str) -> u32 {
     if line.contains("hour") || line.contains("hr") {
         let hours = extract_first_number(line).unwrap_or(0);
         // find minutes after "hour" or "hr"
-        let after_hour = line
-            .split("hour")
-            .last()
-            .or(line.split("hr").last())
-            .unwrap_or("");
+        let after_hour = if line.contains("hour") {
+            line.split("hour").last().unwrap_or("")
+        } else {
+            line.split("hr").last().unwrap_or("")
+        };
         let minutes = extract_first_number(after_hour).unwrap_or(0);
         hours * 60 + minutes
     } else {
@@ -183,4 +183,63 @@ fn parse_recipe(content: &str) -> (String, u32, u32, Option<String>, Vec<String>
         ingredients,
         servings,
     )
+}
+
+#[cfg(test)]
+
+mod test {
+    use super::*;
+
+    #[test]
+    fn test_parse_recipe() {
+        let content = "Chicken Soup\nTotal Time= 30 min\nCalories= 400 per serving\n4 servings\n\nINGREDIENTS\n\nChicken\nNoodles\n\nDIRECTIONS\n\n1. Cook it.";
+        let (name, calories, prep_time_mins, instructions, ingredients, servings) =
+            parse_recipe(content);
+        assert_eq!(name, "Chicken Soup");
+        assert_eq!(calories, 400);
+        assert_eq!(prep_time_mins, 30);
+        assert_eq!(servings, 4);
+        assert_eq!(ingredients, vec!["Chicken", "Noodles"]);
+        assert!(instructions.is_some());
+    }
+
+    #[test]
+    fn test_parse_smoothie() {
+        let content = "Cherry Smoothie\nTime = 10 min\nCalories = 150\n 2 servings\nINGREDIENTS\nCherries\nMilk\nBlueberries";
+        let (name, calories, prep_time_mins, instructions, ingredient, servings) =
+            parse_recipe(content);
+        assert_eq!(name, "Cherry Smoothie");
+        assert_eq!(calories, 150);
+        assert_eq!(servings, 2);
+        assert_eq!(prep_time_mins, 10);
+        assert_eq!(ingredient, vec!["Cherries", "Milk", "Blueberries"]);
+        assert!(instructions.is_none());
+    }
+    #[test]
+    fn extract_num() {
+        assert_eq!(
+            extract_first_number("Calories = 400 per serving"),
+            Some(400)
+        )
+    }
+
+    #[test]
+    fn extract_num_empty() {
+        assert_eq!(extract_first_number("no numbers here"), None)
+    }
+
+    #[test]
+    fn parse_time_1() {
+        assert_eq!(parse_time("Total Time = 45 min"), 45)
+    }
+
+    #[test]
+    fn parse_time_2() {
+        assert_eq!(parse_time("Total Time = 1 hour and 30 min"), 90)
+    }
+
+    #[test]
+    fn parse_time_3() {
+        assert_eq!(parse_time("Total time = 2 hrs 20 minutes"), 140)
+    }
 }

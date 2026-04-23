@@ -139,3 +139,45 @@ fn get_user_input(prompt: &str) -> String {
         .expect("Failed to read line");
     input.trim().to_string()
 }
+
+#[cfg(test)]
+
+mod tests {
+    use super::*;
+
+    #[test]
+    fn low_cal_bounds() {
+        let bounds = CalorieRange::Low.bounds();
+        assert_eq!(bounds, (0, 200))
+    }
+
+    #[test]
+    fn med_cal_bounds() {
+        let bounds = CalorieRange::Medium.bounds();
+        assert_eq!(bounds, (201, 500))
+    }
+
+    #[test]
+    fn high_cal_bounds() {
+        let bounds = CalorieRange::High.bounds();
+        assert_eq!(bounds, (501, u32::MAX))
+    }
+
+    #[test]
+    fn low_prep_bounds() {
+        let bounds = PrepTime::Low.bounds();
+        assert_eq!(bounds, (0, 25))
+    }
+
+    #[test]
+    fn med_prep_bounds() {
+        let bounds = PrepTime::Medium.bounds();
+        assert_eq!(bounds, (26, 45))
+    }
+
+    #[test]
+    fn high_prep_bounds() {
+        let bounds = PrepTime::High.bounds();
+        assert_eq!(bounds, (46, u32::MAX))
+    }
+}
