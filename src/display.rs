@@ -4,6 +4,7 @@ use std::fmt;
 
 impl fmt::Display for Recipe {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        //format allows for the response to print in one big block instead of by line.
         writeln!(f, "{}, {}", self.meal_type, self.name)?;
         writeln!(f, "Total Cook Time = {} minutes", self.prep_time_mins)?;
         writeln!(f, "Total Calories per Serving = {} calories", self.calories)?;
@@ -26,6 +27,7 @@ impl fmt::Display for Recipe {
 }
 
 impl fmt::Display for MealType {
+    //Display needed to be implemented on the enums so that they can print correctly in the format return
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
             Self::Breakfast => write!(f, "Breakfast"),

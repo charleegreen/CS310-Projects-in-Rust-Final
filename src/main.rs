@@ -10,10 +10,10 @@ use recipes::*;
 use rusqlite::Connection;
 use std::io;
 
-fn main() {
-    let dbconnection =
-        SqlLiteConnection::new(Connection::open("RecipeFinder.db").expect("Database not found"));
-    dbconnection.create_table().expect("Could not create table");
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    //I decided to do it this way so that the whole program stops if there is an error. It should not keep asking the questions if it can't connect to the database
+    let dbconnection = SqlLiteConnection::new(Connection::open("RecipeFinder.db")?);
+    dbconnection.create_table()?;
 
     println!("Welcome to the Recipe Finder!");
     let meal = get_user_input(
@@ -22,7 +22,7 @@ fn main() {
         [2] Lunch \n
         [3] Dinner \n
         Please enter 1, 2, or 3",
-    );
+    )?;
 
     let meal_type = match meal.as_str() {
         //making the return into the enum type
@@ -31,7 +31,7 @@ fn main() {
         "3" => MealType::Dinner,
         _ => {
             println!("Invalid entry, restarting...");
-            return;
+            return Ok(());
         }
     };
 
@@ -57,7 +57,8 @@ fn main() {
             [9]American\n
             Please enter 7, 8, or 9",
         ),
-    };
+    }?;
+    //I chose to make all the category options continuous instead of all three sections being 1,2,3 so that doing the match into the enum was smoother
 
     let category = match category.as_str() {
         //making the return into the enum type
@@ -72,7 +73,7 @@ fn main() {
         "9" => Category::American,
         _ => {
             println!("Invalid entry, restarting....");
-            return;
+            return Ok(());
         }
     };
 
@@ -82,7 +83,7 @@ fn main() {
         [2] 201 - 500 calories \n
         [3] above 500 calories \n
         Please enter 1, 2, or 3",
-    );
+    )?;
 
     let calories = match calorie.as_str() {
         "1" => CalorieRange::Low,
@@ -90,7 +91,7 @@ fn main() {
         "3" => CalorieRange::High,
         _ => {
             println!("Invalid entry, restarting...");
-            return;
+            return Ok(());
         }
     };
 
@@ -100,7 +101,7 @@ fn main() {
         [2] 26-45 min \n
         [3] over 45 min \n
         Please enter 1, 2, or 3",
-    );
+    )?;
 
     let prep_time = match time.as_str() {
         "1" => PrepTime::Low,
@@ -108,7 +109,7 @@ fn main() {
         "3" => PrepTime::High,
         _ => {
             println!("Invalid entry, restarting...");
-            return;
+            return Ok(());
         }
     };
 
@@ -129,17 +130,18 @@ fn main() {
         }
         Err(e) => println!("Error finding recipes: {}", e), //issues running filtering
     };
+    Ok(()) //needed snce I changed the main to be returning a result type
 }
 
-fn get_user_input(prompt: &str) -> String {
+fn get_user_input(prompt: &str) -> Result<String, std::io::Error> {
+    //could error in the stdin
     println!("{}", prompt);
     let mut input = String::new();
-    io::stdin()
-        .read_line(&mut input)
-        .expect("Failed to read line");
-    input.trim().to_string()
+    io::stdin().read_line(&mut input)?;
+    Ok(input.trim().to_string())
 }
 
+//all the tests are doing here are checking that the bounds worked correctly
 #[cfg(test)]
 
 mod tests {

@@ -2,6 +2,7 @@ use std::str::FromStr;
 
 #[derive(Debug, PartialEq)]
 pub struct Recipe {
+    //here is my one struct
     pub name: String,
     pub meal_type: MealType,
     pub calories: u32,
@@ -65,6 +66,7 @@ impl FromStr for Category {
     }
 }
 
+// these tests are checking that the parsing works correctly and delivers the correct enum type
 #[cfg(test)]
 
 mod tests {

@@ -60,7 +60,7 @@ pub fn filtering(
 
 #[derive(Debug, PartialEq)]
 pub enum CalorieRange {
-    //this goes here because it is used for the flitering, not necessary for the recipe struct
+    //this goes here because it is used for the filtering, not necessary for the recipe struct
     Low,
     Medium,
     High,

@@ -55,8 +55,6 @@ fn main() {
             (None, rest)
         };
 
-        println!("stem={:?} rest={:?} last={:?}", stem, rest, last); //debug check
-
         let category = match last {
             //grab the category
             "Amer" => Category::American,
@@ -185,6 +183,7 @@ fn parse_recipe(content: &str) -> (String, u32, u32, Option<String>, Vec<String>
     )
 }
 
+//majority of tests here
 #[cfg(test)]
 
 mod test {

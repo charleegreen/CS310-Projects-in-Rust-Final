@@ -5,12 +5,13 @@ pub struct SqlLiteConnection {
     pub conn: Connection,
 }
 
-impl<'a> SqlLiteConnection {
+impl SqlLiteConnection {
     pub fn new(conn: Connection) -> Self {
         Self { conn }
     }
 
     pub fn create_recipe(&mut self, recipe: &Recipe) -> Result<i64, Error> {
+        //enters recipe into the database
         let mut stmt = self.conn.prepare(
             "INSERT INTO recipe (name,meal_type,calories, prep_time_mins, category,
             ingredients, servings, instructions) VALUES (:name,:meal_type,:calories, :prep_time_mins, :category,
