@@ -1,26 +1,73 @@
 # Rust Recipe Finder
 
-## Project Overview
-The goal of this project was to rewrite a previous Python project in Rust. The original Python version relied on deeply nested functions, global mutable state, and a tkinter GUI. This Rust rewrite restructures the logic into clean modules, replaces the GUI with a CLI decision tree, and uses a SQLite database for recipe storage and querying.
+This is my final project for CS310 Programming Projects in Rust at Western Colorado University. I took a recipe finder app I made before in Python and rewrote it in Rust.
 
-The app walks the user through a series of questions about meal type, category, calorie range, and prep time, then displays a randomly selected matching recipe.
+## What it does
 
-A key part of this project was the `migrate` binary, which parses 139 original `.txt` recipe files and loads them into the SQLite database using parallel processing via Rayon.
+The app asks you a few questions about what you want to eat, then picks a random recipe that matches your answers.
 
-## Setup Instructions
+## Why I rewrote it
+
+My original Python version had a lot of nested functions, used global variables and had a tkinter GUI. For the Rust version I:
+
+- Split the code into separate files (modules) so it's more organized
+- Got rid of the global variables
+- Replaced the GUI with simple questions in the terminal
+- Stored all the recipes in a SQLite database instead of reading text files every time
+
+## Moving the recipes into the database
+
+My old recipes were saved as 139 separate `.txt` files. I wrote a separate program (`migrate`) that reads all of them and puts them into the SQLite database. It uses Rayon to read the files in parallel so it runs faster.
+
+## Setup
+
 1. Clone the repository
 2. Make sure Rust is installed (https://rustup.rs)
-3. Run the migration to populate the database:
-```bash
-   cargo run --bin migrate
+3. Run the migration to fill the database:
+```
+cargo run --bin migrate
 ```
 4. Run the app:
-```bash
-   cargo run
+```
+cargo run
 ```
 
-## Usage Example
-- Run the app and follow the prompts
+## How to use it
+
+Run the app and answer the questions by typing a number:
+
+1. **Meal type:** Breakfast, Lunch or Dinner
+2. **Category:** depends on the meal
+   - Breakfast: Eggs, Pancakes or Smoothie
+   - Lunch: Salad, Burger or Pasta
+   - Dinner: Italian, Chinese or American
+3. **Calories:** under 200, 201–500 or over 500
+4. **Prep time:** under 25 min, 26–45 min or over 45 min
+
+The app then shows you a random recipe that matches. If nothing matches, it tells you to try a different combo.
+
+## Files
+
+- `main.rs` asks the questions and shows the result
+- `db.rs` handles the SQLite database connection
+- `filters.rs` finds recipes that match your answers
+- `recipes.rs` holds the recipe data and options
+- `display.rs` controls how a recipe gets printed
+- `bin/migrate.rs` moves the old text files into the database
+
+## Tools I used
+
+- Rust
+- rusqlite (for SQLite)
+- Rayon (for parallel processing)
+- rand (for picking a random recipe)
+
+## What I learned
+
+- How to break a messy program into clean modules
+- How Rust's ownership rules work and why they make global variables harder
+- How to use a SQLite database from Rust
+- How to use Rayon to process lots of files at once
 - Select meal type, category, calorie range, and prep time
 - A matching recipe will be displayed
 
